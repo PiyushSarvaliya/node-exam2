@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <style>
+        #ui {
+            margin: 20px;
+        }
+
+        img {
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">home</a></li>
+                <li><a href="signup.html">signup</a></li>
+                <li><a href="login.html">login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <form id="product">
+        <h1>product</h1>
+        <input type="text" id="title" placeholder="title">
+        <input type="url" id="img" placeholder="img">
+        <input type="text" id="des" placeholder="des">
+        <input type="number" id="price" placeholder="price">
+        <input type="submit">
+    </form>
+    <div id="ui"></div>
+</body>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.getElementById("product").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+
+        let obj = {
+            img: document.getElementById("img").value,
+            title: document.getElementById("title").value,
+            price: document.getElementById("price").value,
+            des: document.getElementById("des").value
+        }
+
+        fetch("http://localhost:8090/productadd", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(obj)
+        })
+            .then((res) => res.json())
+            .then((data) => console.log(data))
+            .catch((err) => console.log(err))
+    })
+
+    const handlepayment = async (amount) => {
+        let res = await fetch("http://localhost:8090/payment", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ amount: amount })
+        })
+        let order = await res.json()
+        let options = {
+            key: "rzp_test_ZwsKvw5bh9rweM",
+            amount: order.amount
+        }
+        let rpay = new Razorpay(options)
+        rpay.open()
+    }
+
+    fetch("http://localhost:8090/allproduct")
+        .then((res) => res.json())
+        .then((data) => {
+            data.map((ele) => {
+                let img = document.createElement("img")
+                img.src = ele.img
+                let title = document.createElement("h2")
+                title.innerHTML = ele.title
+                let price = document.createElement("h4")
+                price.innerHTML = ele.price
+                let des = document.createElement("p")
+                des.innerHTML = ele.des
+                let btn = document.createElement("button")
+                btn.innerHTML = "BUY NOW"
+                btn.addEventListener("click", handlepayment(ele.price))
+                let div = document.createElement("div")
+                div.append(img, title, price, des, btn)
+                document.getElementById("ui").append(div)
+
+            })
+        })
+</script>
+
+</html>
